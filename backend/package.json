@@ -1,0 +1,13 @@
+{
+  "name": "agri-monitor-backend",
+  "version": "1.0.0",
+  "description": "Backend service for agriculture IoT monitoring",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "mqtt": "^4.3.7",
+    "mongodb": "^5.1.0"
+  }
+}
