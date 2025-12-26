@@ -3,24 +3,30 @@ import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
 
-# Load data
-@st.cache_data
-def load_data():
-    orders = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/orders_dataset.csv')
-    customers = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/customers_dataset.csv')
-    products = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/products_dataset.csv')
-    order_items = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/order_items_dataset.csv')
-    return orders, customers, products, order_items
+try:
+    # Load data
+    @st.cache_data
+    def load_data():
+        orders = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/orders_dataset.csv')
+        customers = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/customers_dataset.csv')
+        products = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/products_dataset.csv')
+        order_items = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/order_items_dataset.csv')
+        order_payments = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/order_payments_dataset.csv')
+        order_reviews = pd.read_csv('E-commerce-dataset/E-Commerce Public Dataset/order_reviews_dataset.csv')
+        return orders, customers, products, order_items, order_payments, order_reviews
 
-orders, customers, products, order_items = load_data()
+    orders, customers, products, order_items, order_payments, order_reviews = load_data()
 
-# Merge data
-merged = orders.merge(customers, on='customer_id', how='left')
-merged = merged.merge(order_items, on='order_id', how='left')
-merged = merged.merge(products, on='product_id', how='left')
+    # Merge data
+    merged = orders.merge(customers, on='customer_id', how='left')
+    merged = merged.merge(order_items, on='order_id', how='left')
+    merged = merged.merge(products, on='product_id', how='left')
 
-# Dashboard
-st.title('Dashboard Visualisasi Data E-commerce')
+    # Dashboard
+    st.title('Dashboard Visualisasi Data E-commerce')
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
 
 # Tren Penjualan
 st.header('Tren Penjualan')
@@ -45,4 +51,29 @@ st.plotly_chart(fig)
 st.header('Lokasi Pelanggan')
 customer_locations = customers['customer_state'].value_counts()
 fig = px.bar(customer_locations, title='Jumlah Pelanggan per Negara Bagian')
+st.plotly_chart(fig)
+
+# Tren Pendapatan
+st.header('Tren Pendapatan')
+orders_payments = orders.merge(order_payments, on='order_id', how='left')
+orders_payments['order_purchase_timestamp'] = pd.to_datetime(orders_payments['order_purchase_timestamp'])
+revenue_trend = orders_payments.groupby(orders_payments['order_purchase_timestamp'].dt.to_period('M'))['payment_value'].sum().dropna()
+fig = px.line(revenue_trend, title='Tren Pendapatan Bulanan')
+st.plotly_chart(fig)
+
+# Tren Skor Ulasan Rata-rata
+st.header('Tren Skor Ulasan Rata-rata')
+orders_reviews = orders.merge(order_reviews, on='order_id', how='left')
+orders_reviews['review_creation_date'] = pd.to_datetime(orders_reviews['review_creation_date'])
+review_trend = orders_reviews.groupby(orders_reviews['review_creation_date'].dt.to_period('M'))['review_score'].mean()
+fig = px.line(review_trend, title='Tren Skor Ulasan Rata-rata Bulanan')
+st.plotly_chart(fig)
+
+# Tren Waktu Pengiriman
+st.header('Tren Waktu Pengiriman')
+orders['order_purchase_timestamp'] = pd.to_datetime(orders['order_purchase_timestamp'])
+orders['order_delivered_customer_date'] = pd.to_datetime(orders['order_delivered_customer_date'])
+orders['delivery_time'] = (orders['order_delivered_customer_date'] - orders['order_purchase_timestamp']).dt.days
+delivery_trend = orders.groupby(orders['order_purchase_timestamp'].dt.to_period('M'))['delivery_time'].mean().dropna()
+fig = px.line(delivery_trend, title='Tren Waktu Pengiriman Rata-rata Bulanan (Hari)')
 st.plotly_chart(fig)
