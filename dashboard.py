@@ -31,8 +31,9 @@ except Exception as e:
 # Tren Penjualan
 st.header('Tren Penjualan')
 orders['order_purchase_timestamp'] = pd.to_datetime(orders['order_purchase_timestamp'])
-sales_trend = orders.groupby(orders['order_purchase_timestamp'].dt.to_period('M')).size()
-fig = px.line(sales_trend, title='Tren Penjualan Bulanan')
+sales_trend = orders.groupby(orders['order_purchase_timestamp'].dt.to_period('M')).size().reset_index(name='count')
+sales_trend['order_purchase_timestamp'] = sales_trend['order_purchase_timestamp'].astype(str)
+fig = px.line(sales_trend, x='order_purchase_timestamp', y='count', title='Tren Penjualan Bulanan')
 st.plotly_chart(fig)
 
 # Kategori Produk Teratas
@@ -57,16 +58,18 @@ st.plotly_chart(fig)
 st.header('Tren Pendapatan')
 orders_payments = orders.merge(order_payments, on='order_id', how='left')
 orders_payments['order_purchase_timestamp'] = pd.to_datetime(orders_payments['order_purchase_timestamp'])
-revenue_trend = orders_payments.groupby(orders_payments['order_purchase_timestamp'].dt.to_period('M'))['payment_value'].sum().dropna()
-fig = px.line(revenue_trend, title='Tren Pendapatan Bulanan')
+revenue_trend = orders_payments.groupby(orders_payments['order_purchase_timestamp'].dt.to_period('M'))['payment_value'].sum().dropna().reset_index(name='revenue')
+revenue_trend['order_purchase_timestamp'] = revenue_trend['order_purchase_timestamp'].astype(str)
+fig = px.line(revenue_trend, x='order_purchase_timestamp', y='revenue', title='Tren Pendapatan Bulanan')
 st.plotly_chart(fig)
 
 # Tren Skor Ulasan Rata-rata
 st.header('Tren Skor Ulasan Rata-rata')
 orders_reviews = orders.merge(order_reviews, on='order_id', how='left')
 orders_reviews['review_creation_date'] = pd.to_datetime(orders_reviews['review_creation_date'])
-review_trend = orders_reviews.groupby(orders_reviews['review_creation_date'].dt.to_period('M'))['review_score'].mean()
-fig = px.line(review_trend, title='Tren Skor Ulasan Rata-rata Bulanan')
+review_trend = orders_reviews.groupby(orders_reviews['review_creation_date'].dt.to_period('M'))['review_score'].mean().reset_index(name='avg_score')
+review_trend['review_creation_date'] = review_trend['review_creation_date'].astype(str)
+fig = px.line(review_trend, x='review_creation_date', y='avg_score', title='Tren Skor Ulasan Rata-rata Bulanan')
 st.plotly_chart(fig)
 
 # Tren Waktu Pengiriman
@@ -74,6 +77,7 @@ st.header('Tren Waktu Pengiriman')
 orders['order_purchase_timestamp'] = pd.to_datetime(orders['order_purchase_timestamp'])
 orders['order_delivered_customer_date'] = pd.to_datetime(orders['order_delivered_customer_date'])
 orders['delivery_time'] = (orders['order_delivered_customer_date'] - orders['order_purchase_timestamp']).dt.days
-delivery_trend = orders.groupby(orders['order_purchase_timestamp'].dt.to_period('M'))['delivery_time'].mean().dropna()
-fig = px.line(delivery_trend, title='Tren Waktu Pengiriman Rata-rata Bulanan (Hari)')
+delivery_trend = orders.groupby(orders['order_purchase_timestamp'].dt.to_period('M'))['delivery_time'].mean().dropna().reset_index(name='avg_delivery_time')
+delivery_trend['order_purchase_timestamp'] = delivery_trend['order_purchase_timestamp'].astype(str)
+fig = px.line(delivery_trend, x='order_purchase_timestamp', y='avg_delivery_time', title='Tren Waktu Pengiriman Rata-rata Bulanan (Hari)')
 st.plotly_chart(fig)
